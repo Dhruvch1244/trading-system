@@ -181,9 +181,6 @@ thing that moves.
 
 ## Known rough edges
 
-- `../leapDay2Docker` is an unrelated older scaffold (different services,
-  placeholder registry image names, a hardcoded RDS password) — not part of
-  this stack, left untouched.
 - If you ever recreate the `kafka-ec2` container without its named volume
   (`docker compose -f infra/docker-compose.kafka.yml down -v`), all topics
   and any in-flight PENDING orders referencing them are gone. Re-run the
