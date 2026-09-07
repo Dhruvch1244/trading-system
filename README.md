@@ -113,6 +113,13 @@ First boot takes a few minutes (Maven/npm/pip installs). Subsequent
   sessions individually.
 - **Mobile-responsive** — the desktop floating nav collapses into a top bar + slide-down menu
   below the `md` breakpoint; wide tables scroll horizontally instead of overflowing.
+- **Trade suggestions & top movers** — `GET /api/v1/market/movers` ranks symbols by percent
+  change since UTC midnight; surfaced on the dashboard as labeled "Momentum"/"Pullback"
+  highlights (explicitly disclaimed, not real trading advice).
+- **Live ticker tape** — a scrolling marquee of active movers across the top of the dashboard.
+- **Portfolio allocation** — a donut chart breaking down holdings by symbol.
+- **Price alerts** — set a target price + direction per symbol; checked against every
+  market-data tick, with a nav bell showing unseen triggers.
 
 ## Security notes
 
