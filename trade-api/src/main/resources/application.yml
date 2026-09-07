@@ -28,7 +28,7 @@ trading:
   jwt:
     secret: ${JWT_SECRET:change-me-dev-secret-please-rotate}
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://127.0.0.1:4200,http://192.168.*.*:4200,http://10.*.*.*:4200,http://172.*.*.*:4200}
   kafka:
     topic-orders: ${KAFKA_TOPIC_ORDERS:orders}
     topic-trade-events: ${KAFKA_TOPIC_TRADE_EVENTS:trade-events}
