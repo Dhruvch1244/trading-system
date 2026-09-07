@@ -105,6 +105,14 @@ First boot takes a few minutes (Maven/npm/pip installs). Subsequent
   balance history of every cash movement.
 - **Analytics** — batch ETL from Postgres into a DuckDB star schema, read via a Streamlit
   dashboard with an on-demand refresh button.
+- **Price charts** — candlestick charts per instrument (TradingView's lightweight-charts) on a
+  dedicated `/instruments/:symbol` page with a live-polled quote and a quick buy/sell form.
+- **Live-updating UI** — dashboard, blotter, and watchlist refresh every 5s (RxJS polling, no
+  WebSocket gateway) so fills and price moves show up without a manual reload.
+- **Account settings** — change password (revokes every other session), view/revoke active
+  sessions individually.
+- **Mobile-responsive** — the desktop floating nav collapses into a top bar + slide-down menu
+  below the `md` breakpoint; wide tables scroll horizontally instead of overflowing.
 
 ## Security notes
 
