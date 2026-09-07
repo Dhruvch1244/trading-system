@@ -11,7 +11,7 @@ separate EC2 box.
 ```
 Angular (4200) --HTTPS--> auth-service (3000, NestJS)   [signs/verifies JWT, owns credentials]
      |                         |
-     '--HTTPS Bearer JWT--> trade-api (8080, Spring Boot/MyBatis)
+     '--HTTPS Bearer JWT--> trade-api (8081, Spring Boot/MyBatis)
                                  |  \
                         produces 'orders'   reads accounts/positions/orders
                                  |
@@ -82,7 +82,7 @@ First boot takes a few minutes (Maven/npm/pip installs). Subsequent
 | Frontend             | http://localhost:4200            | Login `demo@trading.local`/`password123`, or register a new account |
 | Auth service          | http://localhost:3000/health     | `/auth/login`, `/auth/signup`, `/auth/refresh`, `/auth/logout`, `/auth/me` |
 | Node auth stub        | http://localhost:3001/health     | Fixture only — accepts `demo@trading.local` with any password |
-| Trade REST API        | http://localhost:8080/health     | JWT-protected under `/api/v1/**` |
+| Trade REST API        | http://localhost:8081/health     | JWT-protected under `/api/v1/**` |
 | Trade executor        | http://localhost:8082/actuator/health | No other endpoints exposed, by design |
 | Fauxnance mock        | http://localhost:5000/health     | `X-Api-Key: dev-fauxnance-key` (or your `.env` value) |
 | Analytics dashboard   | http://localhost:8501            | Click "Refresh from Postgres" on first load |
@@ -117,8 +117,8 @@ First boot takes a few minutes (Maven/npm/pip installs). Subsequent
 - Idempotency keys on order placement are checked against the *requesting* account before
   ever returning a cached order — a key collision from a different account is rejected with
   409, not silently handed someone else's order data.
-- CORS on trade-api is restricted to `CORS_ALLOWED_ORIGINS` (defaults to
-  `http://localhost:4200`) rather than a wildcard.
+- CORS on trade-api is restricted to `CORS_ALLOWED_ORIGINS` origin patterns (defaults to
+  localhost plus the private LAN ranges on port 4200) rather than a bare wildcard.
 - Before deploying this anywhere shared: rotate every secret in `.env`, and note that
   trade-api/trade-executor currently share one Postgres role rather than least-privilege
   per-service roles — fine at this scale, worth revisiting before production.
