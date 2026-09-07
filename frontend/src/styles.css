@@ -109,3 +109,44 @@ body {
   background: var(--rule);
   border-radius: var(--radius-md);
 }
+
+/* Every interactive element gets a visible focus-visible ring - hover state alone isn't a
+   substitute, and this app has no component library (Radix, CDK) supplying it for free. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Page-enter transition: opacity + transform only (no layout properties), CSS-only so there's
+   no React/Angular state involved in the visibility toggle - it just runs once on mount. */
+@media (prefers-reduced-motion: no-preference) {
+  .page-enter {
+    animation: page-enter 400ms var(--ease-fluid);
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

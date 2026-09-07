@@ -9,7 +9,7 @@ import { AuthService } from '../../core/auth.service';
   imports: [FormsModule, RouterLink],
   template: `
     <div class="flex min-h-screen items-center justify-center px-4">
-      <div class="w-full max-w-sm rounded-2xl border border-border glass-panel p-8 shadow-ambient">
+      <div class="w-full max-w-sm rounded-2xl border border-border glass-panel p-8 shadow-ambient page-enter">
         <h1 class="font-display text-4xl text-foreground">Fauxnance</h1>
         <p class="mt-1 text-sm text-muted-foreground">Sign in to your trading account</p>
 

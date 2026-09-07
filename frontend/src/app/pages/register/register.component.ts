@@ -9,7 +9,7 @@ import { AuthService } from '../../core/auth.service';
   imports: [FormsModule, RouterLink],
   template: `
     <div class="flex min-h-screen items-center justify-center px-4 py-12">
-      <div class="w-full max-w-sm rounded-2xl border border-border glass-panel p-8 shadow-ambient">
+      <div class="w-full max-w-sm rounded-2xl border border-border glass-panel p-8 shadow-ambient page-enter">
         <h1 class="font-display text-4xl text-foreground">Create account</h1>
         <p class="mt-1 text-sm text-muted-foreground">Opens a new trading account instantly</p>
 

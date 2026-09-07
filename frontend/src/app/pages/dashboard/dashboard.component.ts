@@ -12,7 +12,7 @@ const DEFAULT_MARKET_TILES = ['AAPL', 'MSFT', 'GOOGL', 'TSLA'];
   standalone: true,
   imports: [CommonModule, RouterLink],
   template: `
-    <div class="mx-auto max-w-6xl px-6 pb-16">
+    <div class="mx-auto max-w-6xl px-6 pb-16 page-enter">
       <h1 class="font-display text-4xl text-foreground">Dashboard</h1>
 
       @if (loading()) {

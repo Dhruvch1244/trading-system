@@ -8,7 +8,7 @@ import { Execution, Order } from '../../core/models';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="mx-auto max-w-5xl px-6 pb-16">
+    <div class="mx-auto max-w-5xl px-6 pb-16 page-enter">
       <div class="flex items-center justify-between">
         <h1 class="font-display text-4xl text-foreground">Blotter</h1>
         <button

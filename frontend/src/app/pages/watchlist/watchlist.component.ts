@@ -9,12 +9,12 @@ import { InstrumentPickerComponent } from '../../shared/instrument-picker.compon
   standalone: true,
   imports: [CommonModule, InstrumentPickerComponent],
   template: `
-    <div class="mx-auto max-w-3xl px-6 pb-16">
+    <div class="mx-auto max-w-3xl px-6 pb-16 page-enter">
       <h1 class="font-display text-4xl text-foreground">Watchlist</h1>
       <p class="mt-1 text-sm text-muted-foreground">Track symbols across the {{ universeHint }} instrument universe.</p>
 
       <div class="mt-6 max-w-md">
-        <app-instrument-picker #picker (symbolSelected)="add($event)" />
+        <app-instrument-picker #picker ariaLabel="Add symbol to watchlist" (symbolSelected)="add($event)" />
       </div>
 
       <div class="mt-6 overflow-hidden rounded-2xl border border-border">

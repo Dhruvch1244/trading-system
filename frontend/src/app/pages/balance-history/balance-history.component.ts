@@ -9,7 +9,7 @@ import { BalanceHistoryEntry } from '../../core/models';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="mx-auto max-w-3xl px-6 pb-16">
+    <div class="mx-auto max-w-3xl px-6 pb-16 page-enter">
       <div class="flex items-center justify-between">
         <div>
           <h1 class="font-display text-4xl text-foreground">Balance history</h1>

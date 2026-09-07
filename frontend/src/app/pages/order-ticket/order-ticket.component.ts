@@ -10,13 +10,13 @@ import { InstrumentPickerComponent } from '../../shared/instrument-picker.compon
   standalone: true,
   imports: [CommonModule, FormsModule, InstrumentPickerComponent],
   template: `
-    <div class="mx-auto max-w-lg px-6 pb-16">
+    <div class="mx-auto max-w-lg px-6 pb-16 page-enter">
       <h1 class="font-display text-4xl text-foreground">Order ticket</h1>
 
       <form class="mt-8 space-y-5 rounded-2xl border border-border glass-panel p-8 shadow-ambient" (ngSubmit)="submit()">
         <div>
           <label class="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">Symbol</label>
-          <app-instrument-picker #picker (symbolSelected)="onSymbolSelected($event)" />
+          <app-instrument-picker #picker ariaLabel="Symbol" (symbolSelected)="onSymbolSelected($event)" />
         </div>
 
         <div class="grid grid-cols-2 gap-4">
