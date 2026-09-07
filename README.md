@@ -140,6 +140,14 @@ Run the analytics batch job on demand (also triggerable from the dashboard's sid
 docker compose run --rm analytics-service
 ```
 
+Seed realistic demo data (40 accounts, 5-15 orders each spread across the last 20 days) so
+the analytics dashboard has more than one day/account to chart - safe to re-run, each run
+adds another 40 accounts on top:
+```bash
+docker exec -i postgres psql -U trading_app -d trading < db/demo-seed.sql
+docker compose run --rm analytics-service   # reload the star schema with the new data
+```
+
 Inspect Kafka directly:
 ```bash
 docker exec kafka-ec2 /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:29092 --list
