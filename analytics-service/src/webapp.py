@@ -11,9 +11,23 @@ import os
 
 import duckdb
 import pandas as pd
+import plotly.express as px
 import streamlit as st
 
 DB_PATH = os.environ.get("DUCKDB_PATH", "/data/analytics.duckdb")
+
+# Streamlit's native st.bar_chart/st.line_chart render through a Vega-Lite iframe whose theme
+# is resolved at the browser's render time - in practice this occasionally comes out as an
+# empty black box regardless of the .streamlit/config.toml theme (a known Streamlit/Vega
+# quirk, not a config mistake). Plotly renders its own SVG/canvas with colors baked directly
+# into the figure, so it can't inherit a broken theme - explicit colors below, not templates.
+ACCENT = "#0e8b96"
+CHART_LAYOUT = dict(
+    paper_bgcolor="white",
+    plot_bgcolor="white",
+    font_color="#14151a",
+    margin=dict(l=10, r=10, t=10, b=10),
+)
 
 st.set_page_config(page_title="Fauxnance Analytics", layout="wide")
 
@@ -63,7 +77,11 @@ left, right = st.columns(2)
 with left:
     st.subheader("Orders by status")
     if not fact_orders.empty:
-        st.bar_chart(fact_orders["status"].value_counts())
+        counts = fact_orders["status"].value_counts().reset_index()
+        counts.columns = ["status", "count"]
+        fig = px.bar(counts, x="status", y="count", color_discrete_sequence=[ACCENT])
+        fig.update_layout(**CHART_LAYOUT)
+        st.plotly_chart(fig, use_container_width=True)
     else:
         st.caption("No orders yet.")
 
@@ -71,15 +89,20 @@ with right:
     st.subheader("Filled volume by symbol")
     filled = fact_orders[fact_orders["status"] == "FILLED"] if not fact_orders.empty else fact_orders
     if not filled.empty:
-        st.bar_chart(filled.groupby("symbol")["qty"].sum())
+        volume = filled.groupby("symbol")["qty"].sum().reset_index()
+        fig = px.bar(volume, x="symbol", y="qty", color_discrete_sequence=[ACCENT])
+        fig.update_layout(**CHART_LAYOUT)
+        st.plotly_chart(fig, use_container_width=True)
     else:
         st.caption("No fills yet.")
 
 st.subheader("Gross traded value by day")
 if not fact_executions.empty and not dim_date.empty:
     merged = fact_executions.merge(dim_date, on="date_key")
-    daily = merged.groupby("date")["gross_amount"].sum().sort_index()
-    st.line_chart(daily)
+    daily = merged.groupby("date")["gross_amount"].sum().sort_index().reset_index()
+    fig = px.line(daily, x="date", y="gross_amount", markers=True, color_discrete_sequence=[ACCENT])
+    fig.update_layout(**CHART_LAYOUT)
+    st.plotly_chart(fig, use_container_width=True)
 else:
     st.caption("No executions yet.")
 
