@@ -1,0 +1,13 @@
+{
+  "name": "fauxnance-mock",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mock of the external Fauxnance API (EOD candles + delayed quotes) for local dev.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

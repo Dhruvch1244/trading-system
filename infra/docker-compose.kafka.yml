@@ -1,0 +1,68 @@
+# Simulated "EC2 Kafka box" - deployed as its own independent compose stack/network,
+# standing in for a separate machine. When you provision the real EC2 instance:
+#   1. Copy this file to the instance, run `docker compose -f docker-compose.kafka.yml up -d`.
+#   2. Open port 9092 in the security group to the app host's IP only - never 0.0.0.0/0.
+#   3. Set KAFKA_BOOTSTRAP_SERVERS=<ec2-public-ip>:9092 in the main stack's .env and remove
+#      the `kafka-ec2-net` external network from docker-compose.yml (no longer needed).
+#
+# Run this stack first: `docker compose -f infra/docker-compose.kafka.yml up -d`
+# It creates the external network the main stack attaches to.
+
+networks:
+  kafka-ec2-net:
+    name: kafka-ec2-net
+    driver: bridge
+
+services:
+  kafka-ec2:
+    image: apache/kafka:3.7.0
+    container_name: kafka-ec2
+    hostname: kafka-ec2
+    restart: unless-stopped
+    ports:
+      # Host-mapped port stands in for the EC2 machine's public port.
+      - "9092:9092"
+    environment:
+      CLUSTER_ID: MTBmY2E0YjMtZTVjNi00
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_NODE_ID: 0
+      KAFKA_PROCESS_ROLES: controller,broker
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 0@kafka-ec2:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: PLAINTEXT://:29092,CONTROLLER://:9093,EXTERNAL://:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-ec2:29092,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    volumes:
+      - kafka-ec2-data:/var/lib/kafka/data
+    networks:
+      - kafka-ec2-net
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:29092 --list || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  kafka-topics-init:
+    image: apache/kafka:3.7.0
+    depends_on:
+      kafka-ec2:
+        condition: service_healthy
+    networks:
+      - kafka-ec2-net
+    entrypoint: ["/bin/bash", "-c"]
+    command: >
+      "
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka-ec2:29092 --create --if-not-exists --topic orders --partitions 3 --replication-factor 1 &&
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka-ec2:29092 --create --if-not-exists --topic trade-events --partitions 3 --replication-factor 1 &&
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka-ec2:29092 --create --if-not-exists --topic market-data --partitions 3 --replication-factor 1 &&
+      echo 'topics created' &&
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka-ec2:29092 --list
+      "
+
+volumes:
+  kafka-ec2-data:

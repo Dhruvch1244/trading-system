@@ -1,0 +1,35 @@
+# Secrets - never commit real values, only .env.example
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+
+# Java / Maven
+target/
+*.class
+.mvn/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Analytics runtime data
+analytics-service/*.duckdb
+data/
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Docker
+*.log

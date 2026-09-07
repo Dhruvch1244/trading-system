@@ -1,0 +1,44 @@
+server:
+  port: ${SERVER_PORT:8082}
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/trading}
+    username: ${SPRING_DATASOURCE_USERNAME:trading_app}
+    password: ${SPRING_DATASOURCE_PASSWORD:trading_app}
+    hikari:
+      maximum-pool-size: 10
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: trade-executor
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+trading:
+  kafka:
+    topic-orders: ${KAFKA_TOPIC_ORDERS:orders}
+    topic-trade-events: ${KAFKA_TOPIC_TRADE_EVENTS:trade-events}
+    topic-market-data: ${KAFKA_TOPIC_MARKET_DATA:market-data}
+  fauxnance:
+    base-url: ${FAUXNANCE_BASE_URL:http://localhost:5000}
+    api-key: ${FAUXNANCE_API_KEY:dev-fauxnance-key}
+  market-data-poll:
+    interval-ms: ${MARKET_DATA_POLL_INTERVAL_MS:120000}
+
+logging:
+  level:
+    com.trading: INFO

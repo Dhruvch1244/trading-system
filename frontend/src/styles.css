@@ -1,0 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Raw values - dark (default) */
+  --void: #07080c;
+  --surface: #0d0f16;
+  --ink: #f2f4f8;
+  --ink-soft: #a8afc0;
+  --ink-faint: #666e82;
+  --rule: #1d2130;
+
+  --cyan: #28e0ec;
+  --cyan-soft: #7aecf4;
+  --warm: #f2b45e;
+  --magenta: #ff2e7e;
+  --violet: #9a6bff;
+
+  --glass: #07080c99;
+  --glass-strong: #0d0f16e0;
+
+  /* Semantic aliases */
+  --background: var(--void);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: var(--void);
+  --secondary: #151822;
+  --secondary-foreground: var(--ink);
+  --accent: var(--cyan);
+  --accent-foreground: var(--void);
+  --muted: #12141c;
+  --muted-foreground: var(--ink-soft);
+  --destructive: #ff5470;
+  --border: var(--rule);
+  --ring: color-mix(in srgb, var(--accent) 55%, transparent);
+
+  --radius-scale: 1;
+  --radius-sm: calc(0.25rem * var(--radius-scale));
+  --radius-md: calc(0.5rem * var(--radius-scale));
+  --radius-lg: calc(0.75rem * var(--radius-scale));
+  --radius-xl: calc(1rem * var(--radius-scale));
+  --radius-2xl: calc(1.25rem * var(--radius-scale));
+  --radius-3xl: calc(1.5rem * var(--radius-scale));
+
+  --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --font-sans: 'Hanken Grotesk', system-ui, sans-serif;
+  --font-display: 'Bebas Neue', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --shadow-ambient: inset 0 1px 0 0 color-mix(in srgb, var(--ink) 6%, transparent),
+    0 8px 24px -8px color-mix(in srgb, #000 60%, transparent);
+  --shadow-glow: 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent),
+    0 0 32px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+* {
+  border-color: var(--border);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.glass-panel {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border-radius: var(--radius-md);
+}

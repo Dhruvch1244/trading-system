@@ -1,0 +1,15 @@
+[browser]
+gatherUsageStats = false
+
+# Explicit theme, matching the Angular frontend's own glass-dark-cyan palette. Without this,
+# Streamlit falls back to the browser's OS-level light/dark preference, and its native
+# st.bar_chart/st.line_chart (Vega-Lite) can end up rendering dark text on a dark background
+# ("everything looks black") when that auto-detected theme doesn't match what the chart
+# defaults expect. Pinning it removes the guesswork.
+[theme]
+base = "dark"
+primaryColor = "#28e0ec"
+backgroundColor = "#07080c"
+secondaryBackgroundColor = "#0d0f16"
+textColor = "#f2f4f8"
+font = "sans serif"

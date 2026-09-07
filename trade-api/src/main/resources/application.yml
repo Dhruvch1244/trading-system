@@ -1,0 +1,39 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/trading}
+    username: ${SPRING_DATASOURCE_USERNAME:trading_app}
+    password: ${SPRING_DATASOURCE_PASSWORD:trading_app}
+    hikari:
+      maximum-pool-size: 10
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: trade-api
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+mybatis:
+  type-handlers-package: com.trading.tradeapi.mapper
+  configuration:
+    map-underscore-to-camel-case: true
+
+trading:
+  jwt:
+    secret: ${JWT_SECRET:change-me-dev-secret-please-rotate}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
+  kafka:
+    topic-orders: ${KAFKA_TOPIC_ORDERS:orders}
+    topic-trade-events: ${KAFKA_TOPIC_TRADE_EVENTS:trade-events}
+    topic-market-data: ${KAFKA_TOPIC_MARKET_DATA:market-data}
+
+logging:
+  level:
+    com.trading: INFO
