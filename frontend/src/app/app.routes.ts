@@ -39,6 +39,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./pages/settings/settings.component').then((m) => m.SettingsComponent),
   },
+  {
+    path: 'alerts',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/alerts/alerts.component').then((m) => m.AlertsComponent),
+  },
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   { path: '**', redirectTo: 'dashboard' },
 ];

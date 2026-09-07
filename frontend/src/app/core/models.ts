@@ -109,6 +109,25 @@ export interface DepositRequest {
   amount: number;
 }
 
+export type AlertDirection = 'ABOVE' | 'BELOW';
+
+export interface PriceAlert {
+  id: number;
+  accountId: number;
+  symbol: string;
+  targetPrice: number;
+  direction: AlertDirection;
+  triggeredAt: string | null;
+  seenAt: string | null;
+  createdAt: string;
+}
+
+export interface Mover {
+  symbol: string;
+  price: number;
+  changePercent: number;
+}
+
 export interface Session {
   id: string;
   createdAt: string;

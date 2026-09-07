@@ -4,14 +4,17 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   Account,
+  AlertDirection,
   BalanceHistoryEntry,
   Candle,
   Execution,
   Instrument,
   MarketDataTick,
+  Mover,
   Order,
   PlaceOrderRequest,
   Position,
+  PriceAlert,
   WatchlistEntry,
 } from './models';
 
@@ -76,5 +79,29 @@ export class TradeApiService {
 
   removeFromWatchlist(symbol: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/api/v1/watchlist/${symbol}`);
+  }
+
+  getMovers(limit = 10): Observable<{ gainers: Mover[]; losers: Mover[] }> {
+    return this.http.get<{ gainers: Mover[]; losers: Mover[] }>(`${this.baseUrl}/api/v1/market/movers?limit=${limit}`);
+  }
+
+  getAlerts(): Observable<PriceAlert[]> {
+    return this.http.get<PriceAlert[]>(`${this.baseUrl}/api/v1/alerts`);
+  }
+
+  createAlert(symbol: string, targetPrice: number, direction: AlertDirection): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/api/v1/alerts`, { symbol, targetPrice, direction });
+  }
+
+  deleteAlert(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/api/v1/alerts/${id}`);
+  }
+
+  getUnseenAlertCount(): Observable<{ count: number }> {
+    return this.http.get<{ count: number }>(`${this.baseUrl}/api/v1/alerts/unseen-count`);
+  }
+
+  markAlertsSeen(): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/api/v1/alerts/mark-seen`, {});
   }
 }

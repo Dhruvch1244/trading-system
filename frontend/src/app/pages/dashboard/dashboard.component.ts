@@ -3,39 +3,100 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subscription, forkJoin, interval, startWith, switchMap } from 'rxjs';
 import { TradeApiService } from '../../core/trade-api.service';
-import { Account, MarketDataTick, Position } from '../../core/models';
+import { Account, MarketDataTick, Mover, Position } from '../../core/models';
+import { TickerTapeComponent } from '../../shared/ticker-tape.component';
+import { DonutChartComponent, DonutSegment } from '../../shared/donut-chart.component';
 
 const DEFAULT_MARKET_TILES = ['AAPL', 'MSFT', 'GOOGL', 'TSLA'];
 const REFRESH_MS = 5000;
+const DONUT_PALETTE = ['#28e0ec', '#9a6bff', '#f2b45e', '#ff2e7e', '#7aecf4', '#a8afc0'];
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TickerTapeComponent, DonutChartComponent],
   template: `
+    @if (tickerItems().length > 0) {
+      <app-ticker-tape [items]="tickerItems()" />
+    }
+
     <div class="mx-auto max-w-6xl px-6 pb-16 page-enter">
-      <h1 class="font-display text-4xl text-foreground">Dashboard</h1>
+      <h1 class="mt-6 font-display text-4xl text-foreground">Dashboard</h1>
 
       @if (loading()) {
         <p class="mt-6 text-sm text-muted-foreground">Loading account…</p>
       } @else {
         <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div class="rounded-2xl border border-border glass-panel p-6 shadow-ambient">
-            <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Portfolio value</p>
+          <div class="rounded-2xl border border-border glass-panel p-6 shadow-glow">
+            <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <span aria-hidden="true">◆</span> Portfolio value
+            </div>
             <p class="mt-2 font-mono text-2xl text-foreground">{{ portfolioValue() | number: '1.2-2' }}</p>
           </div>
           <div class="rounded-2xl border border-border glass-panel p-6 shadow-ambient">
-            <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Cash balance</p>
+            <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <span aria-hidden="true">$</span> Cash balance
+            </div>
             <p class="mt-2 font-mono text-2xl text-foreground">{{ account()?.cashBalance | number: '1.2-2' }}</p>
           </div>
           <div class="rounded-2xl border border-border glass-panel p-6 shadow-ambient">
-            <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Buying power</p>
+            <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <span aria-hidden="true">↑</span> Buying power
+            </div>
             <p class="mt-2 font-mono text-2xl text-accent">{{ account()?.buyingPower | number: '1.2-2' }}</p>
           </div>
           <div class="rounded-2xl border border-border glass-panel p-6 shadow-ambient">
-            <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</p>
+            <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <span aria-hidden="true">●</span> Status
+            </div>
             <p class="mt-2 font-mono text-2xl text-foreground">{{ account()?.status }}</p>
             <p class="mt-1 text-xs text-muted-foreground">{{ account()?.accountReference }}</p>
+          </div>
+        </div>
+
+        <div class="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div class="rounded-2xl border border-border glass-panel p-6 shadow-ambient">
+            <h2 class="font-display text-2xl text-foreground">Allocation</h2>
+            @if (donutSegments().length > 0) {
+              <div class="mt-4">
+                <app-donut-chart [segments]="donutSegments()" />
+              </div>
+            } @else {
+              <p class="mt-4 text-sm text-muted-foreground">Open a position to see your allocation breakdown.</p>
+            }
+          </div>
+
+          <div class="rounded-2xl border border-border glass-panel p-6 shadow-ambient">
+            <h2 class="font-display text-2xl text-foreground">Trade suggestions</h2>
+            <p class="mt-1 text-xs text-muted-foreground">
+              Heuristic highlights from today's biggest movers — not financial advice.
+            </p>
+            <div class="mt-4 space-y-2">
+              @for (suggestion of suggestions(); track suggestion.symbol) {
+                <a
+                  [routerLink]="['/instruments', suggestion.symbol]"
+                  class="flex items-center justify-between rounded-lg border border-border px-3 py-2.5 transition-colors duration-300 ease-fluid hover:border-accent"
+                >
+                  <div>
+                    <span class="font-mono text-sm text-foreground">{{ suggestion.symbol }}</span>
+                    <span
+                      class="ml-2 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                      [class.bg-accent]="suggestion.changePercent >= 0"
+                      [class.text-accent-foreground]="suggestion.changePercent >= 0"
+                      [class.bg-destructive]="suggestion.changePercent < 0"
+                      [class.text-white]="suggestion.changePercent < 0"
+                    >
+                      {{ suggestion.changePercent >= 0 ? 'Momentum' : 'Pullback' }}
+                    </span>
+                  </div>
+                  <span class="font-mono text-sm" [class.text-accent]="suggestion.changePercent >= 0" [class.text-destructive]="suggestion.changePercent < 0">
+                    {{ suggestion.changePercent >= 0 ? '+' : '' }}{{ suggestion.changePercent | number: '1.2-2' }}%
+                  </span>
+                </a>
+              } @empty {
+                <p class="text-sm text-muted-foreground">Not enough price history yet today.</p>
+              }
+            </div>
           </div>
         </div>
 
@@ -105,15 +166,25 @@ const REFRESH_MS = 5000;
 export class DashboardComponent implements OnInit, OnDestroy {
   private readonly tradeApi = inject(TradeApiService);
   private pollSub?: Subscription;
+  private moversSub?: Subscription;
 
   readonly loading = signal(true);
   readonly account = signal<Account | null>(null);
   readonly positions = signal<Position[]>([]);
   readonly marketTileSymbols = signal<string[]>([]);
   readonly quotes = signal<Record<string, MarketDataTick>>({});
+  readonly suggestions = signal<Mover[]>([]);
+  readonly tickerItems = signal<Mover[]>([]);
 
   readonly portfolioValue = () =>
     (this.account()?.cashBalance ?? 0) + this.positions().reduce((sum, p) => sum + p.marketValue, 0);
+
+  readonly donutSegments = (): DonutSegment[] =>
+    this.positions().map((p, i) => ({
+      label: p.symbol,
+      value: p.marketValue,
+      color: DONUT_PALETTE[i % DONUT_PALETTE.length],
+    }));
 
   ngOnInit(): void {
     this.tradeApi.getWatchlist().subscribe((watchlist) => {
@@ -135,10 +206,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.loadQuotes(tileSymbols);
         });
     });
+
+    this.moversSub = interval(REFRESH_MS)
+      .pipe(
+        startWith(0),
+        switchMap(() => this.tradeApi.getMovers(5)),
+      )
+      .subscribe(({ gainers, losers }) => {
+        this.suggestions.set([...gainers.slice(0, 3), ...losers.slice(0, 3)]);
+        this.tickerItems.set([...gainers, ...losers]);
+      });
   }
 
   ngOnDestroy(): void {
     this.pollSub?.unsubscribe();
+    this.moversSub?.unsubscribe();
   }
 
   private loadQuotes(symbols: string[]): void {
