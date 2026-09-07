@@ -88,6 +88,7 @@ First boot takes a few minutes (Maven/npm/pip installs). Subsequent
 | Analytics dashboard   | http://localhost:8501            | Click "Refresh from Postgres" on first load |
 | Postgres              | localhost:5432                   | `trading_app` / your `.env` password |
 | Kafka (simulated EC2) | localhost:9092                   | Internal advertised listener: `kafka-ec2:29092` |
+| Kafdrop (Kafka UI)    | http://localhost:9000            | Browse topics, partitions, offsets, consumer group lag, and individual messages |
 
 ## Features
 

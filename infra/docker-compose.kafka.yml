@@ -64,5 +64,21 @@ services:
       /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka-ec2:29092 --list
       "
 
+  kafdrop:
+    image: obsidiandynamics/kafdrop:4.0.1
+    container_name: kafdrop
+    restart: unless-stopped
+    depends_on:
+      kafka-ec2:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKERCONNECT: kafka-ec2:29092
+      SERVER_SERVLET_CONTEXTPATH: /
+      JVM_OPTS: -Xms32M -Xmx128M
+    ports:
+      - "9000:9000"
+    networks:
+      - kafka-ec2-net
+
 volumes:
   kafka-ec2-data:
