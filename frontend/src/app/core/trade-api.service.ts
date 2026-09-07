@@ -5,6 +5,7 @@ import { environment } from '../../environments/environment';
 import {
   Account,
   BalanceHistoryEntry,
+  Candle,
   Execution,
   Instrument,
   MarketDataTick,
@@ -43,6 +44,10 @@ export class TradeApiService {
 
   getQuote(symbol: string): Observable<MarketDataTick> {
     return this.http.get<MarketDataTick>(`${this.baseUrl}/api/v1/instruments/${symbol}/quote`);
+  }
+
+  getCandles(symbol: string): Observable<Candle[]> {
+    return this.http.get<Candle[]>(`${this.baseUrl}/api/v1/instruments/${symbol}/candles`);
   }
 
   placeOrder(request: PlaceOrderRequest): Observable<Order> {

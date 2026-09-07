@@ -3,13 +3,21 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthStore } from './auth.store';
-import { AuthTokens, CurrentUser, SignupRequest } from './models';
+import { AuthTokens, CurrentUser, Session, SignupRequest } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly authStore = inject(AuthStore);
   private readonly baseUrl = environment.authServiceUrl;
+
+  // The global interceptor only attaches Bearer tokens to trade-api calls (auth-service issues
+  // them, it doesn't need one back) - these auth-service endpoints are the exception, so they
+  // build the header manually, same as establishSession does for /auth/me.
+  private authHeaders(): Record<string, string> {
+    const token = this.authStore.accessToken;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
 
   async login(email: string, password: string): Promise<void> {
     const tokens = await firstValueFrom(
@@ -54,5 +62,27 @@ export class AuthService {
     } catch {
       // Ignore - user is logged out locally regardless.
     }
+  }
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post(
+        `${this.baseUrl}/auth/change-password`,
+        { currentPassword, newPassword },
+        { headers: this.authHeaders() },
+      ),
+    );
+  }
+
+  async getSessions(): Promise<Session[]> {
+    return firstValueFrom(
+      this.http.get<Session[]>(`${this.baseUrl}/auth/sessions`, { headers: this.authHeaders() }),
+    );
+  }
+
+  async revokeSession(id: string): Promise<void> {
+    await firstValueFrom(
+      this.http.delete(`${this.baseUrl}/auth/sessions/${id}`, { headers: this.authHeaders() }),
+    );
   }
 }

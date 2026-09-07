@@ -1,7 +1,10 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subscription, interval, startWith } from 'rxjs';
 import { TradeApiService } from '../../core/trade-api.service';
 import { Execution, Order } from '../../core/models';
+
+const REFRESH_MS = 5000;
 
 @Component({
   selector: 'app-blotter',
@@ -19,8 +22,8 @@ import { Execution, Order } from '../../core/models';
         </button>
       </div>
 
-      <div class="mt-6 overflow-hidden rounded-2xl border border-border">
-        <table class="w-full text-left text-sm">
+      <div class="mt-6 overflow-x-auto rounded-2xl border border-border">
+        <table class="w-full min-w-[720px] text-left text-sm">
           <thead class="bg-muted text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th class="px-4 py-3 font-medium">Time</th>
@@ -97,8 +100,9 @@ import { Execution, Order } from '../../core/models';
     </div>
   `,
 })
-export class BlotterComponent implements OnInit {
+export class BlotterComponent implements OnInit, OnDestroy {
   private readonly tradeApi = inject(TradeApiService);
+  private pollSub?: Subscription;
 
   readonly orders = signal<Order[]>([]);
   readonly expandedOrderId = signal<string | null>(null);
@@ -107,7 +111,15 @@ export class BlotterComponent implements OnInit {
   readonly cancelErrorOrderId = signal<string | null>(null);
 
   ngOnInit(): void {
-    this.refresh();
+    // Auto-refresh so a PENDING order's fill/reject shows up without a manual click - the
+    // explicit Refresh button stays for an immediate re-sync.
+    this.pollSub = interval(REFRESH_MS)
+      .pipe(startWith(0))
+      .subscribe(() => this.refresh());
+  }
+
+  ngOnDestroy(): void {
+    this.pollSub?.unsubscribe();
   }
 
   refresh(): void {

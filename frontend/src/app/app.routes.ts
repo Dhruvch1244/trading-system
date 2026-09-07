@@ -29,6 +29,16 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./pages/balance-history/balance-history.component').then((m) => m.BalanceHistoryComponent),
   },
+  {
+    path: 'instruments/:symbol',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/instrument-detail/instrument-detail.component').then((m) => m.InstrumentDetailComponent),
+  },
+  {
+    path: 'settings',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/settings/settings.component').then((m) => m.SettingsComponent),
+  },
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   { path: '**', redirectTo: 'dashboard' },
 ];

@@ -1,11 +1,12 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { Subscription, forkJoin, interval, startWith, switchMap } from 'rxjs';
 import { TradeApiService } from '../../core/trade-api.service';
 import { Account, MarketDataTick, Position } from '../../core/models';
 
 const DEFAULT_MARKET_TILES = ['AAPL', 'MSFT', 'GOOGL', 'TSLA'];
+const REFRESH_MS = 5000;
 
 @Component({
   selector: 'app-dashboard',
@@ -18,7 +19,7 @@ const DEFAULT_MARKET_TILES = ['AAPL', 'MSFT', 'GOOGL', 'TSLA'];
       @if (loading()) {
         <p class="mt-6 text-sm text-muted-foreground">Loading account…</p>
       } @else {
-        <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
+        <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div class="rounded-2xl border border-border glass-panel p-6 shadow-ambient">
             <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Portfolio value</p>
             <p class="mt-2 font-mono text-2xl text-foreground">{{ portfolioValue() | number: '1.2-2' }}</p>
@@ -45,8 +46,8 @@ const DEFAULT_MARKET_TILES = ['AAPL', 'MSFT', 'GOOGL', 'TSLA'];
           </a>
         </div>
 
-        <div class="mt-4 overflow-hidden rounded-2xl border border-border">
-          <table class="w-full text-left text-sm">
+        <div class="mt-4 overflow-x-auto rounded-2xl border border-border">
+          <table class="w-full min-w-[640px] text-left text-sm">
             <thead class="bg-muted text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th class="px-4 py-3 font-medium">Symbol</th>
@@ -60,7 +61,9 @@ const DEFAULT_MARKET_TILES = ['AAPL', 'MSFT', 'GOOGL', 'TSLA'];
             <tbody>
               @for (position of positions(); track position.symbol) {
                 <tr class="border-t border-border">
-                  <td class="px-4 py-3 font-mono text-foreground">{{ position.symbol }}</td>
+                  <td class="px-4 py-3 font-mono text-foreground">
+                    <a [routerLink]="['/instruments', position.symbol]" class="hover:text-accent hover:underline">{{ position.symbol }}</a>
+                  </td>
                   <td class="px-4 py-3 font-mono text-foreground">{{ position.qty }}</td>
                   <td class="px-4 py-3 font-mono text-muted-foreground">{{ position.avgCost | number: '1.2-2' }}</td>
                   <td class="px-4 py-3 font-mono text-accent">{{ position.lastPrice | number: '1.2-2' }}</td>
@@ -84,20 +87,24 @@ const DEFAULT_MARKET_TILES = ['AAPL', 'MSFT', 'GOOGL', 'TSLA'];
         </div>
         <div class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
           @for (symbol of marketTileSymbols(); track symbol) {
-            <div class="rounded-xl border border-border glass-panel p-4 shadow-ambient">
+            <a
+              [routerLink]="['/instruments', symbol]"
+              class="rounded-xl border border-border glass-panel p-4 shadow-ambient transition-transform duration-300 ease-fluid hover:scale-[1.02]"
+            >
               <p class="font-mono text-sm text-muted-foreground">{{ symbol }}</p>
               <p class="mt-1 font-mono text-lg text-foreground">
                 {{ quotes()[symbol]?.price ?? '—' }}
               </p>
-            </div>
+            </a>
           }
         </div>
       }
     </div>
   `,
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   private readonly tradeApi = inject(TradeApiService);
+  private pollSub?: Subscription;
 
   readonly loading = signal(true);
   readonly account = signal<Account | null>(null);
@@ -109,19 +116,29 @@ export class DashboardComponent implements OnInit {
     (this.account()?.cashBalance ?? 0) + this.positions().reduce((sum, p) => sum + p.marketValue, 0);
 
   ngOnInit(): void {
-    forkJoin({
-      account: this.tradeApi.getAccount(),
-      positions: this.tradeApi.getPositions(),
-      watchlist: this.tradeApi.getWatchlist(),
-    }).subscribe(({ account, positions, watchlist }) => {
-      this.account.set(account);
-      this.positions.set(positions);
-      this.loading.set(false);
-
+    this.tradeApi.getWatchlist().subscribe((watchlist) => {
       const tileSymbols = watchlist.length > 0 ? watchlist.map((w) => w.symbol).slice(0, 4) : DEFAULT_MARKET_TILES;
       this.marketTileSymbols.set(tileSymbols);
-      this.loadQuotes(tileSymbols);
+
+      // Account/positions refresh on a timer so fills from trade-executor and price moves show
+      // up without a manual reload; polling rather than a WebSocket gateway keeps this a plain
+      // HTTP client with no new backend infrastructure.
+      this.pollSub = interval(REFRESH_MS)
+        .pipe(
+          startWith(0),
+          switchMap(() => forkJoin({ account: this.tradeApi.getAccount(), positions: this.tradeApi.getPositions() })),
+        )
+        .subscribe(({ account, positions }) => {
+          this.account.set(account);
+          this.positions.set(positions);
+          this.loading.set(false);
+          this.loadQuotes(tileSymbols);
+        });
     });
+  }
+
+  ngOnDestroy(): void {
+    this.pollSub?.unsubscribe();
   }
 
   private loadQuotes(symbols: string[]): void {

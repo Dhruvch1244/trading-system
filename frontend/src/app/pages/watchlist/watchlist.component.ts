@@ -1,13 +1,17 @@
-import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { Subscription, interval, startWith } from 'rxjs';
 import { TradeApiService } from '../../core/trade-api.service';
 import { Instrument, MarketDataTick, WatchlistEntry } from '../../core/models';
 import { InstrumentPickerComponent } from '../../shared/instrument-picker.component';
 
+const REFRESH_MS = 5000;
+
 @Component({
   selector: 'app-watchlist',
   standalone: true,
-  imports: [CommonModule, InstrumentPickerComponent],
+  imports: [CommonModule, RouterLink, InstrumentPickerComponent],
   template: `
     <div class="mx-auto max-w-3xl px-6 pb-16 page-enter">
       <h1 class="font-display text-4xl text-foreground">Watchlist</h1>
@@ -17,8 +21,8 @@ import { InstrumentPickerComponent } from '../../shared/instrument-picker.compon
         <app-instrument-picker #picker ariaLabel="Add symbol to watchlist" (symbolSelected)="add($event)" />
       </div>
 
-      <div class="mt-6 overflow-hidden rounded-2xl border border-border">
-        <table class="w-full text-left text-sm">
+      <div class="mt-6 overflow-x-auto rounded-2xl border border-border">
+        <table class="w-full min-w-[480px] text-left text-sm">
           <thead class="bg-muted text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th class="px-4 py-3 font-medium">Symbol</th>
@@ -30,7 +34,9 @@ import { InstrumentPickerComponent } from '../../shared/instrument-picker.compon
           <tbody>
             @for (entry of entries(); track entry.symbol) {
               <tr class="border-t border-border">
-                <td class="px-4 py-3 font-mono text-foreground">{{ entry.symbol }}</td>
+                <td class="px-4 py-3 font-mono text-foreground">
+                  <a [routerLink]="['/instruments', entry.symbol]" class="hover:text-accent hover:underline">{{ entry.symbol }}</a>
+                </td>
                 <td class="px-4 py-3 font-mono text-accent">{{ quotes()[entry.symbol]?.price ?? '—' }}</td>
                 <td class="px-4 py-3 font-mono text-xs text-muted-foreground">{{ entry.addedOn | date: 'short' }}</td>
                 <td class="px-4 py-3 text-right">
@@ -52,8 +58,9 @@ import { InstrumentPickerComponent } from '../../shared/instrument-picker.compon
     </div>
   `,
 })
-export class WatchlistComponent implements OnInit {
+export class WatchlistComponent implements OnInit, OnDestroy {
   private readonly tradeApi = inject(TradeApiService);
+  private pollSub?: Subscription;
 
   @ViewChild('picker') picker!: InstrumentPickerComponent;
 
@@ -62,7 +69,13 @@ export class WatchlistComponent implements OnInit {
   readonly universeHint = '250+';
 
   ngOnInit(): void {
-    this.refresh();
+    this.pollSub = interval(REFRESH_MS)
+      .pipe(startWith(0))
+      .subscribe(() => this.refresh());
+  }
+
+  ngOnDestroy(): void {
+    this.pollSub?.unsubscribe();
   }
 
   refresh(): void {

@@ -33,6 +33,9 @@ trading:
     topic-orders: ${KAFKA_TOPIC_ORDERS:orders}
     topic-trade-events: ${KAFKA_TOPIC_TRADE_EVENTS:trade-events}
     topic-market-data: ${KAFKA_TOPIC_MARKET_DATA:market-data}
+  fauxnance:
+    base-url: ${FAUXNANCE_BASE_URL:http://localhost:5000}
+    api-key: ${FAUXNANCE_API_KEY:dev-fauxnance-key}
 
 logging:
   level:

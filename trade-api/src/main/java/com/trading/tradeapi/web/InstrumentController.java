@@ -1,6 +1,7 @@
 package com.trading.tradeapi.web;
 
 import com.trading.tradeapi.domain.Instrument;
+import com.trading.tradeapi.fauxnance.FauxnanceClient;
 import com.trading.tradeapi.kafka.MarketDataCache;
 import com.trading.tradeapi.kafka.MarketDataEvent;
 import com.trading.tradeapi.mapper.InstrumentMapper;
@@ -18,10 +19,12 @@ public class InstrumentController {
 
     private final InstrumentMapper instrumentMapper;
     private final MarketDataCache marketDataCache;
+    private final FauxnanceClient fauxnanceClient;
 
-    public InstrumentController(InstrumentMapper instrumentMapper, MarketDataCache marketDataCache) {
+    public InstrumentController(InstrumentMapper instrumentMapper, MarketDataCache marketDataCache, FauxnanceClient fauxnanceClient) {
         this.instrumentMapper = instrumentMapper;
         this.marketDataCache = marketDataCache;
+        this.fauxnanceClient = fauxnanceClient;
     }
 
     /** With a few hundred instruments, callers should page/search rather than pull everything. */
@@ -37,5 +40,10 @@ public class InstrumentController {
     @GetMapping("/{symbol}/quote")
     public MarketDataEvent quote(@PathVariable String symbol) {
         return marketDataCache.get(symbol.toUpperCase());
+    }
+
+    @GetMapping("/{symbol}/candles")
+    public List<FauxnanceClient.Candle> candles(@PathVariable String symbol) {
+        return fauxnanceClient.getCandles(symbol.toUpperCase());
     }
 }

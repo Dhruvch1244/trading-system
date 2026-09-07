@@ -42,8 +42,8 @@ import { BalanceHistoryEntry } from '../../core/models';
         <p class="mt-2 text-sm text-destructive">{{ depositError() }}</p>
       }
 
-      <div class="mt-6 overflow-hidden rounded-2xl border border-border">
-        <table class="w-full text-left text-sm">
+      <div class="mt-6 overflow-x-auto rounded-2xl border border-border">
+        <table class="w-full min-w-[480px] text-left text-sm">
           <thead class="bg-muted text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th class="px-4 py-3 font-medium">Date</th>

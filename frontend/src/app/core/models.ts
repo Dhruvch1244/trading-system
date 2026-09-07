@@ -62,6 +62,15 @@ export interface MarketDataTick {
   asOf: string;
 }
 
+export interface Candle {
+  date: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
 export type OrderSide = 'BUY' | 'SELL';
 export type OrderType = 'MARKET' | 'LIMIT';
 export type OrderStatus = 'PENDING' | 'FILLED' | 'REJECTED' | 'CANCELLED';
@@ -98,6 +107,12 @@ export interface PlaceOrderRequest {
 
 export interface DepositRequest {
   amount: number;
+}
+
+export interface Session {
+  id: string;
+  createdAt: string;
+  expiresAt: string;
 }
 
 export interface SignupRequest {

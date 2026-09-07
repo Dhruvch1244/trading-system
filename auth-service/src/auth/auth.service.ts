@@ -1,9 +1,10 @@
-import { ConflictException, HttpException, HttpStatus, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, HttpException, HttpStatus, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { Pool } from 'pg';
 import { PG_POOL } from '../database/database.module';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
 
@@ -195,6 +196,58 @@ export class AuthService {
       [tokenHash],
     );
     // No error on an unknown/already-revoked token - logout is idempotent from the client's view.
+  }
+
+  async changePassword(accountId: string, dto: ChangePasswordDto): Promise<void> {
+    const result = await this.pool.query(`SELECT password_hash FROM auth.users WHERE account_id = $1`, [
+      accountId,
+    ]);
+    if (result.rowCount === 0) {
+      throw new UnauthorizedException('user not found');
+    }
+
+    const valid = await bcrypt.compare(dto.currentPassword, result.rows[0].password_hash);
+    if (!valid) {
+      throw new ForbiddenException('current password is incorrect');
+    }
+
+    const newHash = await bcrypt.hash(dto.newPassword, 10);
+    await this.pool.query(`UPDATE auth.users SET password_hash = $1, updated_at = now() WHERE account_id = $2`, [
+      newHash,
+      accountId,
+    ]);
+
+    // Changing your password should kill every other logged-in session, the same way it would
+    // on any real account security page.
+    await this.pool.query(
+      `UPDATE auth.refresh_tokens SET revoked_at = now() WHERE account_id = $1 AND revoked_at IS NULL`,
+      [accountId],
+    );
+  }
+
+  async listSessions(accountId: string) {
+    const result = await this.pool.query(
+      `SELECT id, created_at, expires_at FROM auth.refresh_tokens
+       WHERE account_id = $1 AND revoked_at IS NULL AND expires_at > now()
+       ORDER BY created_at DESC`,
+      [accountId],
+    );
+    return result.rows.map((row) => ({
+      id: row.id,
+      createdAt: row.created_at,
+      expiresAt: row.expires_at,
+    }));
+  }
+
+  async revokeSession(accountId: string, sessionId: string): Promise<void> {
+    const result = await this.pool.query(
+      `UPDATE auth.refresh_tokens SET revoked_at = now()
+       WHERE id = $1 AND account_id = $2 AND revoked_at IS NULL`,
+      [sessionId, accountId],
+    );
+    if (result.rowCount === 0) {
+      throw new UnauthorizedException('session not found');
+    }
   }
 
   async currentUser(accountId: string) {
