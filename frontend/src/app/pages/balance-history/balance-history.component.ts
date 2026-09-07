@@ -48,7 +48,7 @@ import { BalanceHistoryEntry } from '../../core/models';
             <tr>
               <th class="px-4 py-3 font-medium">Date</th>
               <th class="px-4 py-3 font-medium">Type</th>
-              <th class="px-4 py-3 font-medium">Amount</th>
+              <th class="px-4 py-3 text-right font-medium">Amount</th>
               <th class="px-4 py-3 font-medium">Related order</th>
             </tr>
           </thead>
@@ -57,7 +57,7 @@ import { BalanceHistoryEntry } from '../../core/models';
               <tr class="border-t border-border">
                 <td class="px-4 py-3 font-mono text-xs text-muted-foreground">{{ entry.createdOn | date: 'short' }}</td>
                 <td class="px-4 py-3 text-foreground">{{ entry.type }}</td>
-                <td class="px-4 py-3 font-mono" [class.text-accent]="entry.amount >= 0" [class.text-destructive]="entry.amount < 0">
+                <td class="px-4 py-3 text-right font-mono" [class.text-accent]="entry.amount >= 0" [class.text-destructive]="entry.amount < 0">
                   {{ entry.amount >= 0 ? '+' : '' }}{{ entry.amount | number: '1.2-2' }}
                 </td>
                 <td class="px-4 py-3 font-mono text-xs text-muted-foreground">
@@ -66,7 +66,10 @@ import { BalanceHistoryEntry } from '../../core/models';
               </tr>
             } @empty {
               <tr>
-                <td colspan="4" class="px-4 py-8 text-center text-muted-foreground">No balance activity yet.</td>
+                <td colspan="4" class="px-4 py-10 text-center text-muted-foreground">
+                  <span class="text-2xl" aria-hidden="true">$</span>
+                  <p class="mt-2 text-sm">No balance activity yet.</p>
+                </td>
               </tr>
             }
           </tbody>

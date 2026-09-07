@@ -2,9 +2,11 @@ import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription, interval, startWith } from 'rxjs';
 import { TradeApiService } from '../../core/trade-api.service';
-import { Execution, Order } from '../../core/models';
+import { Execution, Order, OrderStatus } from '../../core/models';
 
 const REFRESH_MS = 5000;
+const FILTERS: (OrderStatus | 'ALL')[] = ['ALL', 'PENDING', 'FILLED', 'REJECTED', 'CANCELLED'];
+type SortColumn = 'createdOn' | 'symbol' | 'qty' | 'price';
 
 @Component({
   selector: 'app-blotter',
@@ -41,22 +43,43 @@ const REFRESH_MS = 5000;
         </div>
       </div>
 
-      <div class="mt-6 overflow-x-auto rounded-2xl border border-border">
+      <div class="mt-6 flex flex-wrap gap-2">
+        @for (filter of filters; track filter) {
+          <button
+            (click)="statusFilter.set(filter)"
+            [class.bg-accent]="statusFilter() === filter"
+            [class.text-accent-foreground]="statusFilter() === filter"
+            class="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors duration-300 ease-fluid"
+          >
+            {{ filter }}
+          </button>
+        }
+      </div>
+
+      <div class="mt-4 overflow-x-auto rounded-2xl border border-border">
         <table class="w-full min-w-[720px] text-left text-sm">
           <thead class="bg-muted text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
-              <th class="px-4 py-3 font-medium">Time</th>
-              <th class="px-4 py-3 font-medium">Symbol</th>
+              <th class="cursor-pointer select-none px-4 py-3 font-medium hover:text-foreground" (click)="toggleSort('createdOn')">
+                Time {{ sortIndicator('createdOn') }}
+              </th>
+              <th class="cursor-pointer select-none px-4 py-3 font-medium hover:text-foreground" (click)="toggleSort('symbol')">
+                Symbol {{ sortIndicator('symbol') }}
+              </th>
               <th class="px-4 py-3 font-medium">Side</th>
               <th class="px-4 py-3 font-medium">Type</th>
-              <th class="px-4 py-3 font-medium">Qty</th>
-              <th class="px-4 py-3 font-medium">Price</th>
+              <th class="cursor-pointer select-none px-4 py-3 text-right font-medium hover:text-foreground" (click)="toggleSort('qty')">
+                Qty {{ sortIndicator('qty') }}
+              </th>
+              <th class="cursor-pointer select-none px-4 py-3 text-right font-medium hover:text-foreground" (click)="toggleSort('price')">
+                Price {{ sortIndicator('price') }}
+              </th>
               <th class="px-4 py-3 font-medium">Status</th>
               <th class="px-4 py-3 font-medium"></th>
             </tr>
           </thead>
           <tbody>
-            @for (order of orders(); track order.id) {
+            @for (order of visibleOrders(); track order.id) {
               <tr class="border-t border-border">
                 <td class="px-4 py-3 font-mono text-xs text-muted-foreground">{{ order.createdOn | date: 'short' }}</td>
                 <td class="px-4 py-3 font-mono text-foreground">{{ order.symbol }}</td>
@@ -66,8 +89,8 @@ const REFRESH_MS = 5000;
                   </span>
                 </td>
                 <td class="px-4 py-3 font-mono text-muted-foreground">{{ order.orderType }}</td>
-                <td class="px-4 py-3 font-mono text-foreground">{{ order.qty }}</td>
-                <td class="px-4 py-3 font-mono text-muted-foreground">{{ order.price ?? '—' }}</td>
+                <td class="px-4 py-3 text-right font-mono text-foreground">{{ order.qty }}</td>
+                <td class="px-4 py-3 text-right font-mono text-muted-foreground">{{ order.price ?? '—' }}</td>
                 <td class="px-4 py-3">
                   <span class="rounded-full px-2.5 py-1 text-xs font-semibold" [ngClass]="statusClass(order.status)">
                     {{ order.status }}
@@ -110,7 +133,12 @@ const REFRESH_MS = 5000;
               }
             } @empty {
               <tr>
-                <td colspan="8" class="px-4 py-8 text-center text-muted-foreground">No orders yet.</td>
+                <td colspan="8" class="px-4 py-10 text-center text-muted-foreground">
+                  <span class="text-2xl" aria-hidden="true">◇</span>
+                  <p class="mt-2 text-sm">
+                    {{ statusFilter() === 'ALL' ? 'No orders yet.' : 'No ' + statusFilter().toLowerCase() + ' orders.' }}
+                  </p>
+                </td>
               </tr>
             }
           </tbody>
@@ -123,7 +151,11 @@ export class BlotterComponent implements OnInit, OnDestroy {
   private readonly tradeApi = inject(TradeApiService);
   private pollSub?: Subscription;
 
+  readonly filters = FILTERS;
   readonly orders = signal<Order[]>([]);
+  readonly statusFilter = signal<OrderStatus | 'ALL'>('ALL');
+  readonly sortColumn = signal<SortColumn>('createdOn');
+  readonly sortDescending = signal(true);
   readonly expandedOrderId = signal<string | null>(null);
   readonly executions = signal<Execution[]>([]);
   readonly cancelError = signal<string | null>(null);
@@ -143,6 +175,35 @@ export class BlotterComponent implements OnInit, OnDestroy {
 
   refresh(): void {
     this.tradeApi.getOrderHistory().subscribe((orders) => this.orders.set(orders));
+  }
+
+  visibleOrders(): Order[] {
+    const filter = this.statusFilter();
+    const filtered = filter === 'ALL' ? this.orders() : this.orders().filter((o) => o.status === filter);
+
+    const column = this.sortColumn();
+    const dir = this.sortDescending() ? -1 : 1;
+    return [...filtered].sort((a, b) => {
+      const av = column === 'createdOn' ? new Date(a.createdOn).getTime() : a[column] ?? 0;
+      const bv = column === 'createdOn' ? new Date(b.createdOn).getTime() : b[column] ?? 0;
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return 0;
+    });
+  }
+
+  toggleSort(column: SortColumn): void {
+    if (this.sortColumn() === column) {
+      this.sortDescending.set(!this.sortDescending());
+    } else {
+      this.sortColumn.set(column);
+      this.sortDescending.set(true);
+    }
+  }
+
+  sortIndicator(column: SortColumn): string {
+    if (this.sortColumn() !== column) return '';
+    return this.sortDescending() ? '▼' : '▲';
   }
 
   countByStatus(status: string): number {

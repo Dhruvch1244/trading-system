@@ -27,7 +27,7 @@ const REFRESH_MS = 5000;
           <thead class="bg-muted text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th class="px-4 py-3 font-medium">Symbol</th>
-              <th class="px-4 py-3 font-medium">Last price</th>
+              <th class="px-4 py-3 text-right font-medium">Last price</th>
               <th class="px-4 py-3 font-medium">30-day trend</th>
               <th class="px-4 py-3 font-medium">Added</th>
               <th class="px-4 py-3 font-medium"></th>
@@ -39,7 +39,7 @@ const REFRESH_MS = 5000;
                 <td class="px-4 py-3 font-mono text-foreground">
                   <a [routerLink]="['/instruments', entry.symbol]" class="hover:text-accent hover:underline">{{ entry.symbol }}</a>
                 </td>
-                <td class="px-4 py-3 font-mono text-accent">{{ quotes()[entry.symbol]?.price ?? '—' }}</td>
+                <td class="px-4 py-3 text-right font-mono text-accent">{{ quotes()[entry.symbol]?.price ?? '—' }}</td>
                 <td class="px-4 py-3">
                   @if (sparklines()[entry.symbol]; as values) {
                     <app-sparkline [values]="values" />
@@ -54,8 +54,9 @@ const REFRESH_MS = 5000;
               </tr>
             } @empty {
               <tr>
-                <td colspan="5" class="px-4 py-8 text-center text-muted-foreground">
-                  Search above to add your first symbol.
+                <td colspan="5" class="px-4 py-10 text-center text-muted-foreground">
+                  <span class="text-2xl" aria-hidden="true">☆</span>
+                  <p class="mt-2 text-sm">Search above to add your first symbol.</p>
                 </td>
               </tr>
             }

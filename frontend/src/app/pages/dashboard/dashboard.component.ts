@@ -24,7 +24,14 @@ const DONUT_PALETTE = ['#9a6bff', '#c9aaff', '#28e0ec', '#f2b45e', '#ff2e7e', '#
       <h1 class="mt-6 font-display text-4xl text-foreground">Dashboard</h1>
 
       @if (loading()) {
-        <p class="mt-6 text-sm text-muted-foreground">Loading account…</p>
+        <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          @for (i of [1, 2, 3, 4]; track i) {
+            <div class="rounded-2xl border border-border bg-muted p-6">
+              <div class="h-3 w-24 rounded bg-border"></div>
+              <div class="mt-3 h-6 w-32 rounded bg-border"></div>
+            </div>
+          }
+        </div>
       } @else {
         <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div class="rounded-2xl border border-border glass-panel p-6 shadow-glow">
@@ -112,11 +119,11 @@ const DONUT_PALETTE = ['#9a6bff', '#c9aaff', '#28e0ec', '#f2b45e', '#ff2e7e', '#
             <thead class="bg-muted text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th class="px-4 py-3 font-medium">Symbol</th>
-                <th class="px-4 py-3 font-medium">Qty</th>
-                <th class="px-4 py-3 font-medium">Avg cost</th>
-                <th class="px-4 py-3 font-medium">Last price</th>
-                <th class="px-4 py-3 font-medium">Market value</th>
-                <th class="px-4 py-3 font-medium">Unrealized P&amp;L</th>
+                <th class="px-4 py-3 text-right font-medium">Qty</th>
+                <th class="px-4 py-3 text-right font-medium">Avg cost</th>
+                <th class="px-4 py-3 text-right font-medium">Last price</th>
+                <th class="px-4 py-3 text-right font-medium">Market value</th>
+                <th class="px-4 py-3 text-right font-medium">Unrealized P&amp;L</th>
               </tr>
             </thead>
             <tbody>
@@ -125,17 +132,21 @@ const DONUT_PALETTE = ['#9a6bff', '#c9aaff', '#28e0ec', '#f2b45e', '#ff2e7e', '#
                   <td class="px-4 py-3 font-mono text-foreground">
                     <a [routerLink]="['/instruments', position.symbol]" class="hover:text-accent hover:underline">{{ position.symbol }}</a>
                   </td>
-                  <td class="px-4 py-3 font-mono text-foreground">{{ position.qty }}</td>
-                  <td class="px-4 py-3 font-mono text-muted-foreground">{{ position.avgCost | number: '1.2-2' }}</td>
-                  <td class="px-4 py-3 font-mono text-accent">{{ position.lastPrice | number: '1.2-2' }}</td>
-                  <td class="px-4 py-3 font-mono text-foreground">{{ position.marketValue | number: '1.2-2' }}</td>
-                  <td class="px-4 py-3 font-mono" [class.text-accent]="position.unrealizedPnl >= 0" [class.text-destructive]="position.unrealizedPnl < 0">
+                  <td class="px-4 py-3 text-right font-mono text-foreground">{{ position.qty }}</td>
+                  <td class="px-4 py-3 text-right font-mono text-muted-foreground">{{ position.avgCost | number: '1.2-2' }}</td>
+                  <td class="px-4 py-3 text-right font-mono text-accent">{{ position.lastPrice | number: '1.2-2' }}</td>
+                  <td class="px-4 py-3 text-right font-mono text-foreground">{{ position.marketValue | number: '1.2-2' }}</td>
+                  <td class="px-4 py-3 text-right font-mono" [class.text-accent]="position.unrealizedPnl >= 0" [class.text-destructive]="position.unrealizedPnl < 0">
                     {{ position.unrealizedPnl >= 0 ? '+' : '' }}{{ position.unrealizedPnl | number: '1.2-2' }}
                   </td>
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="6" class="px-4 py-8 text-center text-muted-foreground">No open positions yet.</td>
+                  <td colspan="6" class="px-4 py-10 text-center text-muted-foreground">
+                    <span class="text-2xl" aria-hidden="true">◇</span>
+                    <p class="mt-2 text-sm">No open positions yet.</p>
+                    <a routerLink="/order-ticket" class="mt-1 inline-block text-xs font-medium text-accent hover:underline">Place your first order →</a>
+                  </td>
                 </tr>
               }
             </tbody>

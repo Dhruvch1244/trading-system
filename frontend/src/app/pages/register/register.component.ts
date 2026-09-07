@@ -8,9 +8,30 @@ import { AuthService } from '../../core/auth.service';
   standalone: true,
   imports: [FormsModule, RouterLink],
   template: `
-    <div class="flex min-h-screen items-center justify-center px-4 py-12">
-      <div class="w-full max-w-sm rounded-2xl border border-border glass-panel p-8 shadow-ambient page-enter">
-        <h1 class="font-display text-4xl text-foreground">Create account</h1>
+    <div class="grid min-h-screen grid-cols-1 lg:grid-cols-2">
+      <div class="relative hidden overflow-hidden border-r border-border p-12 lg:flex lg:flex-col lg:justify-between">
+        <div
+          class="pointer-events-none absolute inset-0 opacity-30"
+          style="background: radial-gradient(circle at 30% 20%, var(--accent), transparent 60%)"
+        ></div>
+        <span class="relative font-display text-2xl tracking-wider text-foreground">FAUXNANCE</span>
+
+        <div class="relative">
+          <h1 class="font-display text-5xl leading-tight text-foreground">
+            Your account,<br />funded instantly.
+          </h1>
+          <p class="mt-4 max-w-sm text-sm text-muted-foreground">
+            Sign up and start trading against a live order book with real fill logic —
+            no waiting period, no minimum deposit.
+          </p>
+        </div>
+
+        <p class="relative font-mono text-xs text-muted-foreground">© 2026 Fauxnance — paper trading, real mechanics.</p>
+      </div>
+
+      <div class="flex items-center justify-center px-4 py-12">
+        <div class="w-full max-w-sm">
+        <h1 class="font-display text-3xl text-foreground">Create account</h1>
         <p class="mt-1 text-sm text-muted-foreground">Opens a new trading account instantly</p>
 
         <form class="mt-8 space-y-4" (ngSubmit)="submit()">
@@ -74,6 +95,7 @@ import { AuthService } from '../../core/auth.service';
           Have an account?
           <a routerLink="/login" class="text-accent hover:underline">Sign in</a>
         </p>
+        </div>
       </div>
     </div>
   `,
