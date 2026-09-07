@@ -122,6 +122,15 @@ export interface PriceAlert {
   createdAt: string;
 }
 
+export type NewsSentiment = 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL';
+
+export interface NewsItem {
+  headline: string;
+  source: string;
+  sentiment: NewsSentiment;
+  publishedAt: string;
+}
+
 export interface Mover {
   symbol: string;
   price: number;

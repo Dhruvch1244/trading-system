@@ -51,7 +51,7 @@ import { InstrumentPickerComponent } from '../../shared/instrument-picker.compon
         <button
           type="submit"
           [disabled]="!selectedInstrument() || !targetPrice"
-          class="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground shadow-glow transition-transform duration-300 ease-fluid hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
+          class="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground shadow-glow disabled:cursor-not-allowed disabled:opacity-50"
         >
           Create alert
         </button>

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription, interval, startWith, switchMap } from 'rxjs';
 import { TradeApiService } from '../../core/trade-api.service';
-import { Candle, Instrument, MarketDataTick, OrderSide, WatchlistEntry } from '../../core/models';
+import { Candle, Instrument, MarketDataTick, NewsItem, OrderSide, WatchlistEntry } from '../../core/models';
 import { PriceChartComponent } from '../../shared/price-chart.component';
 
 const QUOTE_POLL_MS = 5000;
@@ -16,19 +16,43 @@ const QUOTE_POLL_MS = 5000;
   template: `
     <div class="mx-auto max-w-5xl px-6 pb-16 page-enter">
       @if (instrument(); as instrument) {
-        <div class="flex items-start justify-between">
+        <div class="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 class="font-display text-4xl text-foreground">{{ instrument.symbol }}</h1>
             <p class="mt-1 text-sm text-muted-foreground">{{ instrument.name }} · {{ instrument.assetClass }}</p>
           </div>
           <div class="text-right">
             <p class="font-mono text-3xl text-accent">{{ quote()?.price ?? '—' }}</p>
+            @if (dayChangePercent(); as change) {
+              <p class="font-mono text-sm" [class.text-accent]="change >= 0" [class.text-destructive]="change < 0">
+                {{ change >= 0 ? '▲' : '▼' }} {{ change | number: '1.2-2' }}% today
+              </p>
+            }
             <button
               (click)="toggleWatchlist()"
               class="mt-2 text-xs font-medium text-muted-foreground hover:text-accent hover:underline"
             >
               {{ onWatchlist() ? '− Remove from watchlist' : '+ Add to watchlist' }}
             </button>
+          </div>
+        </div>
+
+        <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div class="rounded-xl border border-border glass-panel p-4">
+            <p class="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">30-day high</p>
+            <p class="mt-1 font-mono text-lg text-foreground">{{ periodHigh() | number: '1.2-2' }}</p>
+          </div>
+          <div class="rounded-xl border border-border glass-panel p-4">
+            <p class="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">30-day low</p>
+            <p class="mt-1 font-mono text-lg text-foreground">{{ periodLow() | number: '1.2-2' }}</p>
+          </div>
+          <div class="rounded-xl border border-border glass-panel p-4">
+            <p class="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Avg volume</p>
+            <p class="mt-1 font-mono text-lg text-foreground">{{ avgVolume() | number: '1.0-0' }}</p>
+          </div>
+          <div class="rounded-xl border border-border glass-panel p-4">
+            <p class="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Currency</p>
+            <p class="mt-1 font-mono text-lg text-foreground">{{ instrument.currency }}</p>
           </div>
         </div>
 
@@ -53,24 +77,56 @@ const QUOTE_POLL_MS = 5000;
             <button
               (click)="placeQuickOrder('BUY')"
               [disabled]="submitting()"
-              class="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground shadow-glow transition-transform duration-300 ease-fluid hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
+              class="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground shadow-glow disabled:cursor-not-allowed disabled:opacity-50"
             >
               Buy market
             </button>
             <button
               (click)="placeQuickOrder('SELL')"
               [disabled]="submitting()"
-              class="rounded-lg bg-destructive px-5 py-2.5 text-sm font-semibold text-white transition-transform duration-300 ease-fluid hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
+              class="rounded-lg bg-destructive px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               Sell market
             </button>
             <a routerLink="/order-ticket" class="text-sm font-medium text-accent hover:underline">Full order ticket →</a>
           </div>
+          @if (quote(); as q) {
+            <p class="mt-3 text-xs text-muted-foreground">
+              Estimated cost at market: <span class="font-mono text-foreground">{{ (q.price * qty) | number: '1.2-2' }}</span>
+            </p>
+          }
           @if (orderMessage()) {
             <p class="mt-3 text-sm" [class.text-accent]="!orderError()" [class.text-destructive]="orderError()">
               {{ orderMessage() }}
             </p>
           }
+        </div>
+
+        <div class="mt-6 rounded-2xl border border-border glass-panel p-6 shadow-ambient">
+          <h2 class="font-display text-2xl text-foreground">News</h2>
+          <div class="mt-4 space-y-3">
+            @for (item of news(); track item.publishedAt) {
+              <div class="border-b border-border pb-3 last:border-0 last:pb-0">
+                <div class="flex items-start justify-between gap-3">
+                  <p class="text-sm text-foreground">{{ item.headline }}</p>
+                  <span
+                    class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                    [class.bg-accent]="item.sentiment === 'POSITIVE'"
+                    [class.text-accent-foreground]="item.sentiment === 'POSITIVE'"
+                    [class.bg-destructive]="item.sentiment === 'NEGATIVE'"
+                    [class.text-white]="item.sentiment === 'NEGATIVE'"
+                    [class.bg-muted]="item.sentiment === 'NEUTRAL'"
+                    [class.text-muted-foreground]="item.sentiment === 'NEUTRAL'"
+                  >
+                    {{ item.sentiment }}
+                  </span>
+                </div>
+                <p class="mt-1 text-xs text-muted-foreground">{{ item.source }} · {{ item.publishedAt | date: 'medium' }}</p>
+              </div>
+            } @empty {
+              <p class="text-sm text-muted-foreground">No recent news.</p>
+            }
+          </div>
         </div>
       } @else if (notFound()) {
         <p class="text-sm text-muted-foreground">Unknown instrument.</p>
@@ -86,6 +142,7 @@ export class InstrumentDetailComponent implements OnInit, OnDestroy {
   readonly instrument = signal<Instrument | null>(null);
   readonly quote = signal<MarketDataTick | null>(null);
   readonly candles = signal<Candle[]>([]);
+  readonly news = signal<NewsItem[]>([]);
   readonly watchlist = signal<WatchlistEntry[]>([]);
   readonly notFound = signal(false);
   readonly submitting = signal(false);
@@ -93,6 +150,23 @@ export class InstrumentDetailComponent implements OnInit, OnDestroy {
   readonly orderError = signal(false);
 
   readonly onWatchlist = () => this.watchlist().some((w) => w.symbol === this.instrument()?.symbol);
+
+  readonly periodHigh = () => Math.max(...this.candles().map((c) => c.high), 0);
+  readonly periodLow = () => {
+    const lows = this.candles().map((c) => c.low);
+    return lows.length > 0 ? Math.min(...lows) : 0;
+  };
+  readonly avgVolume = () => {
+    const candles = this.candles();
+    return candles.length > 0 ? candles.reduce((sum, c) => sum + c.volume, 0) / candles.length : 0;
+  };
+  readonly dayChangePercent = (): number | null => {
+    const candles = this.candles();
+    const currentPrice = this.quote()?.price;
+    if (candles.length === 0 || currentPrice == null) return null;
+    const previousClose = candles.at(-1)!.close;
+    return previousClose === 0 ? null : ((currentPrice - previousClose) / previousClose) * 100;
+  };
 
   qty = 1;
   private symbol = '';
@@ -110,6 +184,7 @@ export class InstrumentDetailComponent implements OnInit, OnDestroy {
     });
 
     this.tradeApi.getCandles(this.symbol).subscribe((candles) => this.candles.set(candles));
+    this.tradeApi.getNews(this.symbol).subscribe((news) => this.news.set(news));
     this.tradeApi.getWatchlist().subscribe((entries) => this.watchlist.set(entries));
 
     this.pollSub = interval(QUOTE_POLL_MS)

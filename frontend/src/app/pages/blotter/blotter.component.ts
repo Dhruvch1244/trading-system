@@ -22,6 +22,25 @@ const REFRESH_MS = 5000;
         </button>
       </div>
 
+      <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div class="rounded-xl border border-border glass-panel p-4">
+          <p class="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Filled</p>
+          <p class="mt-1 font-mono text-xl text-accent">{{ countByStatus('FILLED') }}</p>
+        </div>
+        <div class="rounded-xl border border-border glass-panel p-4">
+          <p class="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Pending</p>
+          <p class="mt-1 font-mono text-xl text-foreground">{{ countByStatus('PENDING') }}</p>
+        </div>
+        <div class="rounded-xl border border-border glass-panel p-4">
+          <p class="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Rejected</p>
+          <p class="mt-1 font-mono text-xl text-destructive">{{ countByStatus('REJECTED') }}</p>
+        </div>
+        <div class="rounded-xl border border-border glass-panel p-4">
+          <p class="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Filled qty</p>
+          <p class="mt-1 font-mono text-xl text-foreground">{{ totalFilledQty() | number: '1.0-0' }}</p>
+        </div>
+      </div>
+
       <div class="mt-6 overflow-x-auto rounded-2xl border border-border">
         <table class="w-full min-w-[720px] text-left text-sm">
           <thead class="bg-muted text-xs uppercase tracking-wide text-muted-foreground">
@@ -124,6 +143,18 @@ export class BlotterComponent implements OnInit, OnDestroy {
 
   refresh(): void {
     this.tradeApi.getOrderHistory().subscribe((orders) => this.orders.set(orders));
+  }
+
+  countByStatus(status: string): number {
+    return this.orders().filter((o) => o.status === status).length;
+  }
+
+  totalFilledQty(): number {
+    // order.price is only populated for LIMIT orders - MARKET fill prices live on the
+    // execution record, not the order - so this counts filled quantity, not notional value.
+    return this.orders()
+      .filter((o) => o.status === 'FILLED')
+      .reduce((sum, o) => sum + o.qty, 0);
   }
 
   cancel(order: Order): void {

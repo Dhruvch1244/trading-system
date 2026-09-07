@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const { INSTRUMENTS, getQuote } = require('./data');
+const { INSTRUMENTS, getQuote, getNews } = require('./data');
 
 const PORT = process.env.PORT || 5000;
 const API_KEY = process.env.FAUXNANCE_API_KEY || 'dev-fauxnance-key';
@@ -75,6 +75,12 @@ app.get('/quotes', (req, res) => {
   }
 
   res.json({ quotes: response, unknownSymbols: unknown });
+});
+
+app.get('/news/:symbol', (req, res) => {
+  const symbol = req.params.symbol.toUpperCase();
+  const instrument = INSTRUMENTS[symbol];
+  res.json({ symbol, items: getNews(symbol, instrument?.name) });
 });
 
 app.listen(PORT, () => {

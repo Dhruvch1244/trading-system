@@ -31,7 +31,7 @@
   --primary-foreground: var(--void);
   --secondary: #151822;
   --secondary-foreground: var(--ink);
-  --accent: var(--cyan);
+  --accent: var(--violet);
   --accent-foreground: var(--void);
   --muted: #12141c;
   --muted-foreground: var(--ink-soft);
@@ -143,25 +143,8 @@ select:focus-visible,
   border-radius: var(--radius-sm);
 }
 
-/* Page-enter transition: opacity + transform only (no layout properties), CSS-only so there's
-   no React/Angular state involved in the visibility toggle - it just runs once on mount. */
-@media (prefers-reduced-motion: no-preference) {
-  .page-enter {
-    animation: page-enter 400ms var(--ease-fluid);
-  }
-}
-
-@keyframes page-enter {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+/* Animations disabled site-wide per request - .page-enter is now a no-op marker class left in
+   templates (harmless), kept only so a future "turn motion back on" doesn't need template edits. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -59,7 +59,7 @@ import { Session } from '../../core/models';
           <button
             type="submit"
             [disabled]="changingPassword()"
-            class="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground shadow-glow transition-transform duration-300 ease-fluid hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
+            class="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground shadow-glow disabled:cursor-not-allowed disabled:opacity-50"
           >
             {{ changingPassword() ? 'Updating…' : 'Update password' }}
           </button>

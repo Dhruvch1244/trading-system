@@ -12,6 +12,11 @@ import { Candle } from '../core/models';
   selector: 'app-price-chart',
   standalone: true,
   template: `<div #container class="h-full w-full"></div>`,
+  // Custom elements default to display:inline with zero height - without this, the container
+  // div's h-full resolves against a zero-height parent and the chart is created at 0x0 (it
+  // still "works": TradingView's absolutely-positioned attribution logo renders, but the
+  // canvas itself has no area, which is why the chart looked like an empty black box.
+  styles: [':host { display: block; height: 100%; width: 100%; }'],
 })
 export class PriceChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() candles: Candle[] = [];
@@ -43,10 +48,10 @@ export class PriceChartComponent implements AfterViewInit, OnChanges, OnDestroy 
     });
 
     this.series = this.chart.addCandlestickSeries({
-      upColor: '#28e0ec',
+      upColor: '#9a6bff',
       downColor: '#ff5470',
       borderVisible: false,
-      wickUpColor: '#28e0ec',
+      wickUpColor: '#9a6bff',
       wickDownColor: '#ff5470',
     });
 

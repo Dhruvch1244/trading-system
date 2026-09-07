@@ -46,4 +46,9 @@ public class InstrumentController {
     public List<FauxnanceClient.Candle> candles(@PathVariable String symbol) {
         return fauxnanceClient.getCandles(symbol.toUpperCase());
     }
+
+    @GetMapping("/{symbol}/news")
+    public List<FauxnanceClient.NewsItem> news(@PathVariable String symbol) {
+        return fauxnanceClient.getNews(symbol.toUpperCase());
+    }
 }

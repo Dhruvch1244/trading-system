@@ -11,6 +11,7 @@ import {
   Instrument,
   MarketDataTick,
   Mover,
+  NewsItem,
   Order,
   PlaceOrderRequest,
   Position,
@@ -51,6 +52,10 @@ export class TradeApiService {
 
   getCandles(symbol: string): Observable<Candle[]> {
     return this.http.get<Candle[]>(`${this.baseUrl}/api/v1/instruments/${symbol}/candles`);
+  }
+
+  getNews(symbol: string): Observable<NewsItem[]> {
+    return this.http.get<NewsItem[]>(`${this.baseUrl}/api/v1/instruments/${symbol}/news`);
   }
 
   placeOrder(request: PlaceOrderRequest): Observable<Order> {

@@ -41,7 +41,24 @@ public class FauxnanceClient {
         }
     }
 
+    public List<NewsItem> getNews(String symbol) {
+        try {
+            NewsResponse response = restClient.get()
+                    .uri("/news/{symbol}", symbol)
+                    .retrieve()
+                    .body(NewsResponse.class);
+            return response != null && response.items() != null ? response.items() : List.of();
+        } catch (Exception ex) {
+            log.warn("fauxnance news lookup failed for {}: {}", symbol, ex.getMessage());
+            return List.of();
+        }
+    }
+
     public record QuoteResponse(String symbol, String name, Object quote, List<Candle> candles) {}
 
     public record Candle(String date, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close, Long volume) {}
+
+    public record NewsResponse(String symbol, List<NewsItem> items) {}
+
+    public record NewsItem(String headline, String source, String sentiment, String publishedAt) {}
 }

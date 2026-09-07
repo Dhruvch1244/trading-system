@@ -90,4 +90,45 @@ function getQuote(symbol) {
   };
 }
 
-module.exports = { INSTRUMENTS, getQuote };
+const NEWS_SOURCES = ['MarketPulse Wire', 'Fauxnance News', 'The Ticker Tape', 'Street Signal', 'Capital Digest'];
+
+const HEADLINE_TEMPLATES = [
+  { text: (n) => `${n} beats quarterly expectations, shares react`, sentiment: 'POSITIVE' },
+  { text: (n) => `Analysts raise price target on ${n} citing strong demand`, sentiment: 'POSITIVE' },
+  { text: (n) => `${n} announces new product line, investors optimistic`, sentiment: 'POSITIVE' },
+  { text: (n) => `${n} expands into new markets, momentum builds`, sentiment: 'POSITIVE' },
+  { text: (n) => `${n} misses revenue estimates for the quarter`, sentiment: 'NEGATIVE' },
+  { text: (n) => `Regulatory scrutiny weighs on ${n} outlook`, sentiment: 'NEGATIVE' },
+  { text: (n) => `${n} faces supply chain headwinds heading into next quarter`, sentiment: 'NEGATIVE' },
+  { text: (n) => `Analysts trim estimates for ${n} amid sector weakness`, sentiment: 'NEGATIVE' },
+  { text: (n) => `${n} holds steady as broader market digests recent moves`, sentiment: 'NEUTRAL' },
+  { text: (n) => `What to watch for ${n} in the coming weeks`, sentiment: 'NEUTRAL' },
+  { text: (n) => `${n} announces executive leadership change`, sentiment: 'NEUTRAL' },
+];
+
+/**
+ * Synthetic headlines, same deterministic-per-symbol approach as candles - no real news
+ * source, but stable across restarts so a symbol's feed doesn't reshuffle on every request.
+ */
+function getNews(symbol, name) {
+  const rand = mulberry32(hashString('news:' + symbol));
+  const count = 5 + Math.floor(rand() * 4); // 5-8 headlines
+  const displayName = name || symbol;
+  const items = [];
+
+  for (let i = 0; i < count; i++) {
+    const template = HEADLINE_TEMPLATES[Math.floor(rand() * HEADLINE_TEMPLATES.length)];
+    const source = NEWS_SOURCES[Math.floor(rand() * NEWS_SOURCES.length)];
+    const hoursAgo = Math.floor(i * (6 + rand() * 18)) + 1;
+    items.push({
+      headline: template.text(displayName),
+      source,
+      sentiment: template.sentiment,
+      publishedAt: new Date(Date.now() - hoursAgo * 60 * 60 * 1000).toISOString(),
+    });
+  }
+
+  return items.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+}
+
+module.exports = { INSTRUMENTS, getQuote, getNews };

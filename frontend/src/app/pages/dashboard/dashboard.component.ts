@@ -9,7 +9,7 @@ import { DonutChartComponent, DonutSegment } from '../../shared/donut-chart.comp
 
 const DEFAULT_MARKET_TILES = ['AAPL', 'MSFT', 'GOOGL', 'TSLA'];
 const REFRESH_MS = 5000;
-const DONUT_PALETTE = ['#28e0ec', '#9a6bff', '#f2b45e', '#ff2e7e', '#7aecf4', '#a8afc0'];
+const DONUT_PALETTE = ['#9a6bff', '#c9aaff', '#28e0ec', '#f2b45e', '#ff2e7e', '#a8afc0'];
 
 @Component({
   selector: 'app-dashboard',
@@ -102,7 +102,7 @@ const DONUT_PALETTE = ['#28e0ec', '#9a6bff', '#f2b45e', '#ff2e7e', '#7aecf4', '#
 
         <div class="mt-10 flex items-center justify-between">
           <h2 class="font-display text-2xl text-foreground">Positions</h2>
-          <a routerLink="/order-ticket" class="rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-accent-foreground shadow-glow transition-transform duration-300 ease-fluid hover:scale-[1.02]">
+          <a routerLink="/order-ticket" class="rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-accent-foreground shadow-glow">
             + New order
           </a>
         </div>
@@ -150,7 +150,7 @@ const DONUT_PALETTE = ['#28e0ec', '#9a6bff', '#f2b45e', '#ff2e7e', '#7aecf4', '#
           @for (symbol of marketTileSymbols(); track symbol) {
             <a
               [routerLink]="['/instruments', symbol]"
-              class="rounded-xl border border-border glass-panel p-4 shadow-ambient transition-transform duration-300 ease-fluid hover:scale-[1.02]"
+              class="rounded-xl border border-border glass-panel p-4 shadow-ambient"
             >
               <p class="font-mono text-sm text-muted-foreground">{{ symbol }}</p>
               <p class="mt-1 font-mono text-lg text-foreground">

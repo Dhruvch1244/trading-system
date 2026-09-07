@@ -5,15 +5,16 @@ import { Subscription, interval, startWith } from 'rxjs';
 import { TradeApiService } from '../../core/trade-api.service';
 import { Instrument, MarketDataTick, WatchlistEntry } from '../../core/models';
 import { InstrumentPickerComponent } from '../../shared/instrument-picker.component';
+import { SparklineComponent } from '../../shared/sparkline.component';
 
 const REFRESH_MS = 5000;
 
 @Component({
   selector: 'app-watchlist',
   standalone: true,
-  imports: [CommonModule, RouterLink, InstrumentPickerComponent],
+  imports: [CommonModule, RouterLink, InstrumentPickerComponent, SparklineComponent],
   template: `
-    <div class="mx-auto max-w-3xl px-6 pb-16 page-enter">
+    <div class="mx-auto max-w-4xl px-6 pb-16 page-enter">
       <h1 class="font-display text-4xl text-foreground">Watchlist</h1>
       <p class="mt-1 text-sm text-muted-foreground">Track symbols across the {{ universeHint }} instrument universe.</p>
 
@@ -22,11 +23,12 @@ const REFRESH_MS = 5000;
       </div>
 
       <div class="mt-6 overflow-x-auto rounded-2xl border border-border">
-        <table class="w-full min-w-[480px] text-left text-sm">
+        <table class="w-full min-w-[600px] text-left text-sm">
           <thead class="bg-muted text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th class="px-4 py-3 font-medium">Symbol</th>
               <th class="px-4 py-3 font-medium">Last price</th>
+              <th class="px-4 py-3 font-medium">30-day trend</th>
               <th class="px-4 py-3 font-medium">Added</th>
               <th class="px-4 py-3 font-medium"></th>
             </tr>
@@ -38,6 +40,11 @@ const REFRESH_MS = 5000;
                   <a [routerLink]="['/instruments', entry.symbol]" class="hover:text-accent hover:underline">{{ entry.symbol }}</a>
                 </td>
                 <td class="px-4 py-3 font-mono text-accent">{{ quotes()[entry.symbol]?.price ?? '—' }}</td>
+                <td class="px-4 py-3">
+                  @if (sparklines()[entry.symbol]; as values) {
+                    <app-sparkline [values]="values" />
+                  }
+                </td>
                 <td class="px-4 py-3 font-mono text-xs text-muted-foreground">{{ entry.addedOn | date: 'short' }}</td>
                 <td class="px-4 py-3 text-right">
                   <button (click)="remove(entry.symbol)" class="text-xs font-medium text-destructive hover:underline">
@@ -47,7 +54,7 @@ const REFRESH_MS = 5000;
               </tr>
             } @empty {
               <tr>
-                <td colspan="4" class="px-4 py-8 text-center text-muted-foreground">
+                <td colspan="5" class="px-4 py-8 text-center text-muted-foreground">
                   Search above to add your first symbol.
                 </td>
               </tr>
@@ -61,11 +68,13 @@ const REFRESH_MS = 5000;
 export class WatchlistComponent implements OnInit, OnDestroy {
   private readonly tradeApi = inject(TradeApiService);
   private pollSub?: Subscription;
+  private sparklineLoaded = new Set<string>();
 
   @ViewChild('picker') picker!: InstrumentPickerComponent;
 
   readonly entries = signal<WatchlistEntry[]>([]);
   readonly quotes = signal<Record<string, MarketDataTick>>({});
+  readonly sparklines = signal<Record<string, number[]>>({});
   readonly universeHint = '250+';
 
   ngOnInit(): void {
@@ -86,6 +95,14 @@ export class WatchlistComponent implements OnInit, OnDestroy {
           if (!tick) return;
           this.quotes.update((current) => ({ ...current, [entry.symbol]: tick }));
         });
+
+        // Candles are daily data - fetch once per symbol, not on every 5s poll tick.
+        if (!this.sparklineLoaded.has(entry.symbol)) {
+          this.sparklineLoaded.add(entry.symbol);
+          this.tradeApi.getCandles(entry.symbol).subscribe((candles) => {
+            this.sparklines.update((current) => ({ ...current, [entry.symbol]: candles.map((c) => c.close) }));
+          });
+        }
       }
     });
   }

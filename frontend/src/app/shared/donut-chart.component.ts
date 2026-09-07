@@ -17,25 +17,24 @@ export interface DonutSegment {
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="flex items-center gap-6">
+    <div class="flex flex-wrap items-center justify-center gap-8">
       <div
-        class="h-36 w-36 shrink-0 rounded-full"
+        class="relative h-44 w-44 shrink-0 rounded-full shadow-ambient"
         [style.background]="gradient()"
       >
-        <div class="flex h-full w-full items-center justify-center">
-          <div class="flex h-24 w-24 flex-col items-center justify-center rounded-full bg-background text-center">
-            <span class="font-mono text-xs text-muted-foreground">Total</span>
-            <span class="font-mono text-sm text-foreground">{{ total() | number: '1.0-0' }}</span>
-          </div>
+        <div class="absolute inset-3 flex flex-col items-center justify-center rounded-full bg-background text-center">
+          <span class="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Total value</span>
+          <span class="mt-0.5 font-mono text-lg text-foreground">{{ total() | number: '1.0-0' }}</span>
         </div>
       </div>
 
-      <ul class="space-y-1.5">
+      <ul class="min-w-[160px] space-y-2.5">
         @for (segment of segments; track segment.label) {
-          <li class="flex items-center gap-2 text-sm">
-            <span class="h-2.5 w-2.5 rounded-full" [style.background]="segment.color"></span>
+          <li class="flex items-center gap-2.5 text-sm">
+            <span class="h-3 w-3 shrink-0 rounded-full" [style.background]="segment.color"></span>
             <span class="font-mono text-foreground">{{ segment.label }}</span>
-            <span class="text-xs text-muted-foreground">{{ percent(segment.value) | number: '1.0-1' }}%</span>
+            <span class="ml-auto font-mono text-xs text-muted-foreground">{{ segment.value | number: '1.0-0' }}</span>
+            <span class="w-12 text-right font-mono text-xs text-accent">{{ percent(segment.value) | number: '1.0-1' }}%</span>
           </li>
         }
       </ul>
