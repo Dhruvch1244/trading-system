@@ -31,6 +31,10 @@ export class TradeApiService {
     return this.http.get<BalanceHistoryEntry[]>(`${this.baseUrl}/api/v1/accounts/me/balance-history?limit=${limit}`);
   }
 
+  deposit(amount: number): Observable<Account> {
+    return this.http.post<Account>(`${this.baseUrl}/api/v1/accounts/me/deposit`, { amount });
+  }
+
   /** Instrument universe is ~250 names - always search/page, never assume "all" fits one screen. */
   searchInstruments(search = '', limit = 50, offset = 0): Observable<Instrument[]> {
     const params = new HttpParams().set('search', search).set('limit', limit).set('offset', offset);

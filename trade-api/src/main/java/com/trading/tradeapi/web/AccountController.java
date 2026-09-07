@@ -3,14 +3,18 @@ package com.trading.tradeapi.web;
 import com.trading.tradeapi.domain.Account;
 import com.trading.tradeapi.domain.BalanceHistoryEntry;
 import com.trading.tradeapi.domain.Position;
+import com.trading.tradeapi.dto.DepositRequest;
 import com.trading.tradeapi.dto.PositionView;
 import com.trading.tradeapi.kafka.MarketDataCache;
 import com.trading.tradeapi.kafka.MarketDataEvent;
 import com.trading.tradeapi.mapper.AccountMapper;
 import com.trading.tradeapi.mapper.BalanceHistoryMapper;
 import com.trading.tradeapi.mapper.PositionMapper;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,16 +29,19 @@ public class AccountController {
     private final PositionMapper positionMapper;
     private final BalanceHistoryMapper balanceHistoryMapper;
     private final MarketDataCache marketDataCache;
+    private final AccountService accountService;
 
     public AccountController(
             AccountMapper accountMapper,
             PositionMapper positionMapper,
             BalanceHistoryMapper balanceHistoryMapper,
-            MarketDataCache marketDataCache) {
+            MarketDataCache marketDataCache,
+            AccountService accountService) {
         this.accountMapper = accountMapper;
         this.positionMapper = positionMapper;
         this.balanceHistoryMapper = balanceHistoryMapper;
         this.marketDataCache = marketDataCache;
+        this.accountService = accountService;
     }
 
     @GetMapping("/api/v1/accounts/me")
@@ -69,6 +76,11 @@ public class AccountController {
                 marketValue,
                 unrealizedPnl
         );
+    }
+
+    @PostMapping("/api/v1/accounts/me/deposit")
+    public Account deposit(@CurrentAccount Long accountId, @Valid @RequestBody DepositRequest request) {
+        return accountService.deposit(accountId, request.getAmount());
     }
 
     @GetMapping("/api/v1/accounts/me/balance-history")

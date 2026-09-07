@@ -96,6 +96,10 @@ export interface PlaceOrderRequest {
   idempotencyKey: string;
 }
 
+export interface DepositRequest {
+  amount: number;
+}
+
 export interface SignupRequest {
   email: string;
   password: string;
